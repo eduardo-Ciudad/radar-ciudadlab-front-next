@@ -41,8 +41,53 @@ export function formatDuration(totalSeconds: number) {
 }
 
 export function formatDate(value: string) {
-  const [, month, day] = value.split("-");
+  const [, month, day] = value.slice(0, 10).split("-");
   return `${day}/${month}`;
+}
+
+export function formatFullDate(value: string) {
+  const [year, month, day] = value.slice(0, 10).split("-");
+  return `${day}/${month}/${year}`;
+}
+
+const saoPauloDateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
+  timeZone: "America/Sao_Paulo",
+  day: "2-digit",
+  month: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
+const saoPauloDateFormatter = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "America/Sao_Paulo",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+export function formatDateTime(value: string, now = new Date()) {
+  const date = new Date(value);
+  const parts = saoPauloDateTimeFormatter.formatToParts(date);
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value ?? "";
+  const time = `${part("hour")}:${part("minute")}`;
+  const dateKey = saoPauloDateFormatter.format(date);
+  const todayKey = saoPauloDateFormatter.format(now);
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayKey = saoPauloDateFormatter.format(yesterday);
+
+  if (dateKey === todayKey) return `hoje, ${time}`;
+  if (dateKey === yesterdayKey) return `ontem, ${time}`;
+  return `${part("day")}/${part("month")}, ${time}`;
+}
+
+export function getDomain(url: string) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url.replace(/^https?:\/\//, "").split("/")[0].replace(/^www\./, "");
+  }
 }
 
 export const channelNames: Record<string, string> = {
