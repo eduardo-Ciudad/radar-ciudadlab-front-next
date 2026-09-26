@@ -1,6 +1,6 @@
 import { changePercent, channelNames, deviceNames, formatChange, formatDecimal, formatDuration, formatNumber, formatPercent } from "@/lib/format";
 import { SyncButton } from "@/components/sync-button";
-import type { Breakdown, DashboardResponse } from "@/types/dashboard";
+import type { Breakdown, DashboardResponse, GaStatus } from "@/types/dashboard";
 
 type Kpi = {
   label: string;
@@ -99,10 +99,11 @@ export function EventsCard({ events }: { events: Breakdown[] }) {
   );
 }
 
-export function EmptyDashboard({ admin, siteId }: { admin: boolean; siteId: number }) {
+export function EmptyDashboard({ admin, siteId, gaStatus }: { admin: boolean; siteId: number; gaStatus: GaStatus }) {
+  const noAccess = gaStatus === "NO_ACCESS";
   return (
     <section className="flex min-h-[420px] items-center justify-center rounded-2xl border border-card-border bg-card px-6 text-center">
-      <div className="max-w-sm"><span className="label text-accent">Google Analytics</span><h2 className="mt-3 font-heading text-3xl font-semibold tracking-tight">Ainda sem dados — sincronize o site</h2><p className="mt-3 text-sm leading-6 text-muted">Assim que a primeira coleta terminar, os indicadores aparecerão aqui.</p>{admin && <div className="mt-6 flex justify-center"><SyncButton siteId={siteId} /></div>}</div>
+      <div className="max-w-sm"><span className="label text-accent">Google Analytics</span><h2 className="mt-3 font-heading text-3xl font-semibold tracking-tight">{noAccess ? "Sem acesso a esta propriedade" : "Ainda sem dados — sincronize o site"}</h2><p className="mt-3 text-sm leading-6 text-muted">{noAccess ? "A conta conectada não tem permissão para ler os dados deste site. Revise o acesso no Google Analytics." : "Assim que a primeira coleta terminar, os indicadores aparecerão aqui."}</p>{admin && !noAccess && <div className="mt-6 flex justify-center"><SyncButton siteId={siteId} /></div>}</div>
     </section>
   );
 }
