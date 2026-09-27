@@ -18,7 +18,7 @@ function Sidebar({ email, role, sites, onNavigate }: Omit<Props, "children"> & {
   const links: { label: string; href: string; icon: typeof AppWindow; badge?: string }[] = [
     { label: "Sites", href: analyticsSite ? "/sites" : "/sites", icon: AppWindow },
     { label: "Analytics", href: analyticsSite ? `/sites/${analyticsSite.id}` : "/sites", icon: BarChart3 },
-    { label: "Leads", href: "/leads/importar", icon: UsersRound },
+    ...(role === "ADMIN" ? [{ label: "Leads", href: "/leads", icon: UsersRound }] : []),
   ];
 
   async function logout() {
@@ -38,7 +38,7 @@ function Sidebar({ email, role, sites, onNavigate }: Omit<Props, "children"> & {
             ? pathname === "/sites"
             : label === "Analytics"
               ? /^\/sites\/[^/]+\/?$/.test(pathname)
-              : pathname.startsWith(href);
+              : label === "Leads" ? pathname.startsWith("/leads") : pathname.startsWith(href);
           return <Link key={label} href={href} onClick={onNavigate} aria-current={active ? "page" : undefined} className={`focus-ring flex min-h-11 items-center gap-3 rounded-[10px] px-3 text-sm transition ${active ? "border border-card-border bg-white font-semibold text-primary" : "font-medium text-[#5a5a5a] hover:bg-black/[0.025]"}`}><Icon size={18} strokeWidth={1.7} className={active ? "text-accent" : ""} /><span>{label}</span>{badge && <span className="ml-auto rounded-full bg-black/[0.06] px-2 py-0.5 text-[11px] font-semibold">{badge}</span>}</Link>;
         })}
         <span aria-disabled="true" className="flex min-h-11 cursor-not-allowed items-center gap-3 rounded-[10px] px-3 text-sm font-medium text-[#5a5a5a]/45"><Settings2 size={18} strokeWidth={1.7} />Usuários</span>
