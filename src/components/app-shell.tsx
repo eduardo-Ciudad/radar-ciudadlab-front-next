@@ -3,7 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { BarChart3, LogOut, Menu, Settings2, UsersRound, X, AppWindow } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Brand } from "@/components/brand";
 import { getDomain } from "@/lib/format";
@@ -13,20 +13,19 @@ type Props = { children: React.ReactNode; email: string; role: string; sites: Si
 
 function Sidebar({ email, role, sites, onNavigate }: Omit<Props, "children"> & { onNavigate?: () => void }) {
   const pathname = usePathname();
-  const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
   const analyticsSite = sites.find((site) => site.dataSince !== null);
-  const links = [
+  const links: { label: string; href: string; icon: typeof AppWindow; badge?: string }[] = [
     { label: "Sites", href: analyticsSite ? "/sites" : "/sites", icon: AppWindow },
     { label: "Analytics", href: analyticsSite ? `/sites/${analyticsSite.id}` : "/sites", icon: BarChart3 },
-    { label: "Leads", href: "/leads", icon: UsersRound, badge: "em breve" },
+    { label: "Leads", href: "/leads/importar", icon: UsersRound },
   ];
 
   async function logout() {
     setLoggingOut(true);
     try { await fetch("/api/session", { method: "DELETE" }); } finally {
-      router.replace("/login");
-      router.refresh();
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- full reload clears authenticated RSC state
+      window.location.assign("/login");
     }
   }
 

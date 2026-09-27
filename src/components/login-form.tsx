@@ -2,10 +2,8 @@
 
 import { ArrowRight, LoaderCircle } from "lucide-react";
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 
 export function LoginForm() {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,16 +23,18 @@ export function LoginForm() {
 
       if (!response.ok) {
         setError(response.status === 401 ? "E-mail ou senha incorretos." : "Não foi possível entrar. Tente novamente.");
+        setLoading(false);
         return;
       }
 
-      router.replace("/sites");
-      router.refresh();
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- full reload prevents competing RSC navigations after setting the cookie
+      window.location.assign("/sites");
+      return;
     } catch {
       setError("Não foi possível entrar. Verifique sua conexão.");
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
   }
 
   return (
