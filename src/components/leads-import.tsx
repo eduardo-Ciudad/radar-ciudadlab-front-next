@@ -20,7 +20,7 @@ function IssueList({ title, issues }: { title: string; issues: ImportIssue[] }) 
   return <section><h3 className="text-sm font-semibold text-primary">{title}</h3>{items(issues.slice(0, 5))}{issues.length > 5 && <details className="mt-3 text-sm"><summary className="focus-ring w-fit cursor-pointer rounded font-semibold text-accent">Ver todos ({issues.length})</summary><div className="mt-2 border-l border-divider pl-4">{items(issues.slice(5))}</div></details>}</section>;
 }
 
-export function LeadsImport({ admin, batches }: { admin: boolean; batches: ImportBatch[] }) {
+export function LeadsImport({ batches }: { batches: ImportBatch[] }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -28,8 +28,6 @@ export function LeadsImport({ admin, batches }: { admin: boolean; batches: Impor
   const [submitting, setSubmitting] = useState(false);
   const [validationError, setValidationError] = useState<string>();
   const [result, setResult] = useState<Result>();
-
-  if (!admin) return <p className="border-y border-divider py-4 text-sm text-muted">Somente administradores podem importar arquivos.</p>;
 
   function chooseFile(selected?: File) {
     if (!selected || submitting) return;
