@@ -17,6 +17,11 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
+  icons: {
+    icon: "/ciudadlab-perfil-C.png",
+    shortcut: "/ciudadlab-perfil-C.png",
+    apple: "/ciudadlab-perfil-C.png",
+  },
   title: { default: "Radar — CiudadLab", template: "%s — Radar" },
   description: "Analytics e leads dos sites CiudadLab em um só lugar.",
 };
