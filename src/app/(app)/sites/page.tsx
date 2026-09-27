@@ -11,6 +11,8 @@ import type { DashboardResponse } from "@/types/dashboard";
 export const metadata: Metadata = { title: "Sites" };
 
 export default async function SitesPage() {
+  // eslint-disable-next-line react-hooks/purity -- development-only server render timing
+  const startedAt = performance.now();
   const period = getPeriod(28);
   const [role, sites] = await Promise.all([getUserRole(), getSites()]);
   const eligibleSites = sites.filter((site) => site.gaConfigured && site.dataSince);
@@ -25,6 +27,9 @@ export default async function SitesPage() {
   const unavailable = sites.filter((site) => site.gaStatus === "NO_ACCESS").length;
   const pending = sites.filter((site) => site.gaStatus === "PENDING").length;
   const latestSync = sites.reduce<string | null>((latest, site) => !site.lastSyncAt || (latest && latest >= site.lastSyncAt) ? latest : site.lastSyncAt, null);
+
+  // eslint-disable-next-line react-hooks/purity -- development-only server render timing
+  if (process.env.NODE_ENV !== "production") console.info(`[render] /sites ${(performance.now() - startedAt).toFixed(1)}ms`);
 
   return (
     <div className="mx-auto flex w-full max-w-[1280px] min-w-0 flex-col gap-6 px-4 py-5 sm:px-7 sm:py-8 lg:px-12 lg:py-10">

@@ -22,6 +22,9 @@ export class ApiError extends Error {
 }
 
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const startedAt = performance.now();
+  const method = init.method ?? "GET";
+  let status: number | string = "ERROR";
   const cookieStore = await cookies();
   const token = cookieStore.get(ACCESS_COOKIE)?.value;
 
@@ -31,22 +34,29 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   headers.set("Authorization", `Bearer ${token}`);
   if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
 
-  const response = await fetch(`${API_URL}${path.startsWith("/") ? path : `/${path}`}`, {
-    ...init,
-    headers,
-    cache: init.cache ?? "no-store",
-  });
+  try {
+    const response = await fetch(`${API_URL}${path.startsWith("/") ? path : `/${path}`}`, {
+      ...init,
+      headers,
+      cache: init.cache ?? "no-store",
+    });
+    status = response.status;
 
-  if (response.status === 401) redirect("/api/session?expired=1");
-  if (!response.ok) {
-    const problem = (await response.json().catch(() => ({}))) as ProblemDetail;
-    throw new ApiError(
-      response.status,
-      problem.title ?? response.statusText ?? "Erro na API",
-      problem.detail,
-    );
+    if (response.status === 401) redirect("/api/session?expired=1");
+    if (!response.ok) {
+      const problem = (await response.json().catch(() => ({}))) as ProblemDetail;
+      throw new ApiError(
+        response.status,
+        problem.title ?? response.statusText ?? "Erro na API",
+        problem.detail,
+      );
+    }
+
+    if (response.status === 204) return undefined as T;
+    return response.json() as Promise<T>;
+  } finally {
+    if (process.env.NODE_ENV !== "production") {
+      console.info(`[api] ${method} ${path} ${status} ${(performance.now() - startedAt).toFixed(1)}ms`);
+    }
   }
-
-  if (response.status === 204) return undefined as T;
-  return response.json() as Promise<T>;
 }

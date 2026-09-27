@@ -29,6 +29,8 @@ const statusChip: Record<GaStatus, { label: string; className: string }> = {
 };
 
 export default async function SitePage({ params, searchParams }: Props) {
+  // eslint-disable-next-line react-hooks/purity -- development-only server render timing
+  const startedAt = performance.now();
   const [{ id }, query, role, sites] = await Promise.all([params, searchParams, getUserRole(), getSites()]);
   const days = parsePeriod(query.periodo);
   const period = getPeriod(days);
@@ -62,6 +64,9 @@ export default async function SitePage({ params, searchParams }: Props) {
   const admin = role === "ADMIN";
   const currentDaily = fillDaily(dashboard.daily, period.from, period.to);
   const previousDaily = dashboard.previous.sessions > 0 && previousDashboard ? fillDaily(previousDashboard.daily, period.previousFrom, period.previousTo) : undefined;
+
+  // eslint-disable-next-line react-hooks/purity -- development-only server render timing
+  if (process.env.NODE_ENV !== "production") console.info(`[render] /sites/${id} ${(performance.now() - startedAt).toFixed(1)}ms`);
 
   return (
     <div className="mx-auto flex w-full max-w-[1280px] min-w-0 flex-col gap-4 px-4 py-5 sm:gap-6 sm:px-7 sm:py-8 lg:px-12 lg:py-10">
