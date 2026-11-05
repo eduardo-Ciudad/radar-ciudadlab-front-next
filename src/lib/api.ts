@@ -4,8 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ACCESS_COOKIE } from "@/lib/session";
 import type { ProblemDetail } from "@/lib/session";
-
-const API_URL = (process.env.RADAR_API_URL ?? "http://localhost:8080").replace(/\/$/, "");
+import { backendFetch } from "@/lib/backend-fetch";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -35,7 +34,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
 
   try {
-    const response = await fetch(`${API_URL}${path.startsWith("/") ? path : `/${path}`}`, {
+    const response = await backendFetch(path, {
       ...init,
       headers,
       cache: init.cache ?? "no-store",
