@@ -5,6 +5,7 @@ import { useState } from "react";
 import { LeadCard } from "@/components/lead-card";
 import { LeadFilters } from "@/components/lead-filters";
 import { RescoreMenu } from "@/components/rescore-menu";
+import { redirectIfUnauthorized } from "@/lib/client-session";
 import { formatDateTime, formatNumber } from "@/lib/format";
 import type { LeadSearchParams } from "@/lib/lead-filters";
 import { leadHref } from "@/lib/lead-filters";
@@ -16,7 +17,7 @@ export function LeadBoard({ initialBoard, params, filters, latest, filtered }: {
   async function move(leadId: number, from: LeadStatus, to: LeadStatus, statusNote?: string) {
     const snapshot = structuredClone(board); setError("");
     setBoard((current) => { const source = current.columns.find((column) => column.status === from); const lead = source?.leads.find((item) => item.id === leadId); if (!source || !lead) return current; const columns = current.columns.map((column) => ({ ...column, leads: [...column.leads] })); const sourceCopy = columns.find((column) => column.status === from)!; sourceCopy.leads = sourceCopy.leads.filter((item) => item.id !== leadId); sourceCopy.count = Math.max(0, sourceCopy.count - 1); const target = columns.find((column) => column.status === to); if (target) { target.leads = [{ ...lead, status: to }, ...target.leads].slice(0, 20); target.count += 1; } const leavesFunnel = to === "PERDIDO" || to === "DESCARTADO"; return { ...current, columns, active: leavesFunnel ? Math.max(0, current.active - 1) : current.active, outOfFunnel: leavesFunnel ? current.outOfFunnel + 1 : current.outOfFunnel, lost: to === "PERDIDO" ? current.lost + 1 : current.lost, discarded: to === "DESCARTADO" ? current.discarded + 1 : current.discarded }; });
-    try { const response = await fetch(`/api/leads/${leadId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: to, ...(statusNote ? { statusNote } : {}) }) }); const data = await response.json().catch(() => ({})) as { detail?: string }; if (!response.ok) throw new Error(data.detail || "Não foi possível mover o lead."); router.refresh(); }
+    try { const response = await fetch(`/api/leads/${leadId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: to, ...(statusNote ? { statusNote } : {}) }) }); if (redirectIfUnauthorized(response)) return; const data = await response.json().catch(() => ({})) as { detail?: string }; if (!response.ok) throw new Error(data.detail || "Não foi possível mover o lead."); router.refresh(); }
     catch (caught) { setBoard(snapshot); const message = caught instanceof Error ? caught.message : "Não foi possível mover o lead."; setError(message); throw new Error(message); }
   }
   const totalShown = board.columns.reduce((sum, column) => sum + column.leads.length, 0);
