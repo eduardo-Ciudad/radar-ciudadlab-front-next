@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { ACCESS_COOKIE, LoginResponse, ProblemDetail, ROLE_COOKIE } from "@/lib/session";
 import { clearSession } from "@/lib/session-response";
-
-const API_URL = (process.env.RADAR_API_URL ?? "http://localhost:8080").replace(/\/$/, "");
+import { backendFetch } from "@/lib/backend-fetch";
 
 export async function POST(request: NextRequest) {
   let credentials: unknown;
@@ -18,7 +17,7 @@ export async function POST(request: NextRequest) {
     const forwardedFor = request.headers.get("x-forwarded-for");
     if (forwardedFor) headers.set("x-forwarded-for", forwardedFor);
 
-    const backendResponse = await fetch(`${API_URL}/api/auth/login`, {
+    const backendResponse = await backendFetch("/api/auth/login", {
       method: "POST",
       headers,
       body: JSON.stringify(credentials),
@@ -65,7 +64,7 @@ export async function DELETE() {
   const accessToken = (await cookies()).get(ACCESS_COOKIE)?.value;
   if (accessToken) {
     try {
-      await fetch(`${API_URL}/api/auth/logout`, {
+      await backendFetch("/api/auth/logout", {
         method: "POST",
         headers: { Authorization: `Bearer ${accessToken}` },
         cache: "no-store",
