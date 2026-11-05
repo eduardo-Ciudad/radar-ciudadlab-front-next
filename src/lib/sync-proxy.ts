@@ -4,15 +4,14 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { ACCESS_COOKIE } from "@/lib/session";
 import { unauthorizedResponse } from "@/lib/session-response";
-
-const API_URL = (process.env.RADAR_API_URL ?? "http://localhost:8080").replace(/\/$/, "");
+import { backendFetch } from "@/lib/backend-fetch";
 
 export async function proxySync(path: string) {
   const token = (await cookies()).get(ACCESS_COOKIE)?.value;
   if (!token) return unauthorizedResponse();
 
   try {
-    const response = await fetch(`${API_URL}${path}`, {
+    const response = await backendFetch(path, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
