@@ -1,12 +1,13 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { ACCESS_COOKIE } from "@/lib/session";
+import { unauthorizedResponse } from "@/lib/session-response";
 
 const API_URL = (process.env.RADAR_API_URL ?? "http://localhost:8080").replace(/\/$/, "");
 
 export async function POST(request: Request) {
   const token = (await cookies()).get(ACCESS_COOKIE)?.value;
-  if (!token) return NextResponse.json({ title: "Não autorizado", detail: "Sua sessão expirou." }, { status: 401 });
+  if (!token) return unauthorizedResponse();
 
   let form: FormData;
   try {
@@ -22,6 +23,7 @@ export async function POST(request: Request) {
       body: form,
       cache: "no-store",
     });
+    if (response.status === 401) return unauthorizedResponse();
     const payload = await response.json().catch(() => ({}));
     return NextResponse.json(payload, { status: response.status });
   } catch {
