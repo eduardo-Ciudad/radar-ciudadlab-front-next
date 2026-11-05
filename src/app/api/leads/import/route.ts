@@ -2,8 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { ACCESS_COOKIE } from "@/lib/session";
 import { unauthorizedResponse } from "@/lib/session-response";
-
-const API_URL = (process.env.RADAR_API_URL ?? "http://localhost:8080").replace(/\/$/, "");
+import { backendFetch } from "@/lib/backend-fetch";
 
 export async function POST(request: Request) {
   const token = (await cookies()).get(ACCESS_COOKIE)?.value;
@@ -17,7 +16,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const response = await fetch(`${API_URL}/api/leads/import`, {
+    const response = await backendFetch("/api/leads/import", {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: form,
