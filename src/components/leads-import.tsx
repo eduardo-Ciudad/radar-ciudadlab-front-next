@@ -4,6 +4,7 @@ import { FileText, LoaderCircle, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { formatDateTime, formatNumber } from "@/lib/format";
+import { redirectIfUnauthorized } from "@/lib/client-session";
 import type { ImportBatch, ImportIssue, ImportReport, LeadsProblemDetail } from "@/types/leads";
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
@@ -49,11 +50,8 @@ export function LeadsImport({ batches }: { batches: ImportBatch[] }) {
     const form = new FormData(); form.append("file", file);
     try {
       const response = await fetch("/api/leads/import", { method: "POST", body: form });
+      if (redirectIfUnauthorized(response)) return;
       const data = await response.json().catch(() => ({})) as ImportReport & LeadsProblemDetail;
-      if (response.status === 401) {
-        // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- full reload clears authenticated RSC state
-        window.location.assign("/login"); return;
-      }
       if (response.status === 201) {
         setResult({ kind: "success", report: data });
         router.replace(`/leads/importar?destaque=${data.batchId}`);
