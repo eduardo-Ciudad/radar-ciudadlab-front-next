@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { ACCESS_COOKIE, LoginResponse, ProblemDetail, ROLE_COOKIE } from "@/lib/session";
+import { clearSession } from "@/lib/session-response";
 
 const API_URL = (process.env.RADAR_API_URL ?? "http://localhost:8080").replace(/\/$/, "");
-
-function clearSession(response: NextResponse) {
-  response.cookies.set(ACCESS_COOKIE, "", { httpOnly: true, expires: new Date(0), path: "/" });
-  response.cookies.set(ROLE_COOKIE, "", { expires: new Date(0), path: "/" });
-}
 
 export async function POST(request: NextRequest) {
   let credentials: unknown;
@@ -65,6 +62,20 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE() {
+  const accessToken = (await cookies()).get(ACCESS_COOKIE)?.value;
+  if (accessToken) {
+    try {
+      await fetch(`${API_URL}/api/auth/logout`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+        cache: "no-store",
+        signal: AbortSignal.timeout(5_000),
+      });
+    } catch {
+      // A sessão local deve ser encerrada mesmo se o backend estiver indisponível.
+    }
+  }
+
   const response = NextResponse.json({ ok: true });
   clearSession(response);
   return response;
